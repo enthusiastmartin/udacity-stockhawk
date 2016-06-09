@@ -19,6 +19,7 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.sam_chordas.android.stockhawk.R;
@@ -90,7 +91,6 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
             }));
     recyclerView.setAdapter(mCursorAdapter);
 
-
     FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
     fab.attachToRecyclerView(recyclerView);
     fab.setOnClickListener(new View.OnClickListener() {
@@ -160,9 +160,24 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
   public void onResume() {
     super.onResume();
     getLoaderManager().restartLoader(CURSOR_LOADER_ID, null, this);
+
+    //Check connection again
+    ConnectivityManager cm =
+        (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+    NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+    isConnected = activeNetwork != null &&
+        activeNetwork.isConnectedOrConnecting();
+
+    if ( isConnected ){
+      ((LinearLayout) findViewById(R.id.main_no_connection)).setVisibility(View.GONE);
+    }else{
+      ((LinearLayout) findViewById(R.id.main_no_connection)).setVisibility(View.VISIBLE);
+    }
   }
 
   public void networkToast(){
+    ((LinearLayout) findViewById(R.id.main_no_connection)).setVisibility(View.VISIBLE);
     Toast.makeText(mContext, getString(R.string.network_toast), Toast.LENGTH_SHORT).show();
   }
 
