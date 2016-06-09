@@ -49,6 +49,7 @@ public class StockTaskService extends GcmTaskService{
 
   @Override
   public int onRunTask(TaskParams params){
+    Log.d("BLA", "onRunTask: running task task taks");
     Cursor initQueryCursor;
     if (mContext == null){
       mContext = this;
@@ -122,7 +123,7 @@ public class StockTaskService extends GcmTaskService{
                 null, null);
           }
           mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY,
-              Utils.quoteJsonToContentVals(getResponse));
+              Utils.quoteJsonToContentVals(mContext, getResponse));
         }catch (RemoteException | OperationApplicationException e){
           Log.e(LOG_TAG, "Error applying batch insert", e);
         }

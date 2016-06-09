@@ -1,11 +1,16 @@
 package com.sam_chordas.android.stockhawk.rest;
 
 import android.content.ContentProviderOperation;
+import android.content.ContentValues;
+import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
+import com.sam_chordas.android.stockhawk.historyData.HistoryContract;
+import com.sam_chordas.android.stockhawk.historyData.HistoryDbHelper;
+
 import java.util.ArrayList;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -16,11 +21,11 @@ import org.json.JSONObject;
  */
 public class Utils {
 
-  private static String LOG_TAG = Utils.class.getSimpleName();
+  private static String TAG = Utils.class.getSimpleName();
 
   public static boolean showPercent = true;
 
-  public static ArrayList quoteJsonToContentVals(String JSON){
+  public static ArrayList quoteJsonToContentVals(Context context, String JSON){
     ArrayList<ContentProviderOperation> batchOperations = new ArrayList<>();
     JSONObject jsonObject = null;
     JSONArray resultsArray = null;
@@ -32,7 +37,7 @@ public class Utils {
         if (count == 1){
           jsonObject = jsonObject.getJSONObject("results")
               .getJSONObject("quote");
-          ContentProviderOperation operation = buildBatchOperation(jsonObject);
+          ContentProviderOperation operation = buildBatchOperation(context, jsonObject);
           if ( operation != null ) {
             batchOperations.add(operation);
           }
@@ -42,7 +47,7 @@ public class Utils {
           if (resultsArray != null && resultsArray.length() != 0){
             for (int i = 0; i < resultsArray.length(); i++){
               jsonObject = resultsArray.getJSONObject(i);
-              ContentProviderOperation operation = buildBatchOperation(jsonObject);
+              ContentProviderOperation operation = buildBatchOperation(context, jsonObject);
               if ( operation != null )
                 batchOperations.add(operation);
             }
@@ -50,7 +55,7 @@ public class Utils {
         }
       }
     } catch (JSONException e){
-      Log.e(LOG_TAG, "String to JSON failed: " + e);
+      Log.e(TAG, "String to JSON failed: " + e);
     }
     return batchOperations;
   }
@@ -77,13 +82,12 @@ public class Utils {
     return change;
   }
 
-  public static ContentProviderOperation buildBatchOperation(JSONObject jsonObject){
+  public static ContentProviderOperation buildBatchOperation(Context context, JSONObject
+      jsonObject){
     ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(
         QuoteProvider.Quotes.CONTENT_URI);
     try {
       String change = jsonObject.getString("Change");
-      Log.d("BLA", "buildBatchOperation: huha");
-      Log.d("BLA", change);
       if ( change == null  || change.equals("null")) {
         return null;
       }
@@ -98,6 +102,18 @@ public class Utils {
       } else {
         builder.withValue(QuoteColumns.ISUP, 1);
       }
+
+      ContentValues cv = new ContentValues();
+      cv.put(HistoryContract.QuoteEntry.COLUMN_QUoTE_SYMBOL, jsonObject.getString("symbol"));
+      cv.put(HistoryContract.QuoteEntry.COLUMN_QUoTE_VALUE, Float.parseFloat(truncateBidPrice
+          (jsonObject.getString("Bid"))));
+
+      Log.d(TAG, "buildBatchOperation: insertin value");
+      HistoryDbHelper dbHelper = new HistoryDbHelper(context);
+      long _id = dbHelper.getWritableDatabase().insert(HistoryContract.QuoteEntry.TABLE_NAME, null,
+          cv);
+      Log.d(TAG, "buildBatchOperation: insertin value done" + _id);
+      dbHelper.close();
     } catch (JSONException e){
       e.printStackTrace();
     }

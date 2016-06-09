@@ -20,6 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.sam_chordas.android.stockhawk.R;
@@ -87,6 +88,10 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
               @Override public void onItemClick(View v, int position) {
                 //TODO:
                 // do something on item click
+                TextView textView = (TextView) v.findViewById(R.id.stock_symbol);
+                Intent intent = new Intent(getApplicationContext(), ChartActivity.class);
+                intent.putExtra("symbol", textView.getText().toString());
+                startActivity(intent);
               }
             }));
     recyclerView.setAdapter(mCursorAdapter);
